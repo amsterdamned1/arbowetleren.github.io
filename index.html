@@ -1,0 +1,650 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Arbowet Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: één smalle werkkolom; kaartvraag centraal, artikelnummer als "wetsreferentie" in mono. Accent = veiligheidsgroen (nooduitgangbord). */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c2420; --muted:#5b665f; --line:#d7dcd6;
+  --accent:#0b7a4b; --accent-ink:#ffffff; --accent-soft:#e1f1e8;
+  --good:#1f7a3a; --good-soft:#e3f3e6; --bad:#b3261e; --bad-soft:#fbe7e5; --warn:#8a5a00; --warn-soft:#fbf0d6;
+  --f-display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1b211e; --ink:#e6ebe7; --muted:#9aa69f; --line:#2e3833;
+  --accent:#3fbf86; --accent-ink:#0b1a12; --accent-soft:#1d3329;
+  --good:#5fcf7f; --good-soft:#1c3123; --bad:#ff8a80; --bad-soft:#3a1f1d; --warn:#f0c060; --warn-soft:#3a3018; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1b211e; --ink:#e6ebe7; --muted:#9aa69f; --line:#2e3833;
+  --accent:#3fbf86; --accent-ink:#0b1a12; --accent-soft:#1d3329;
+  --good:#5fcf7f; --good-soft:#1c3123; --bad:#ff8a80; --bad-soft:#3a1f1d; --warn:#f0c060; --warn-soft:#3a3018; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.75rem;line-height:1.15;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem;margin:2px 0 0}
+.sync{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);letter-spacing:.02em}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font:inherit;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:flex;flex-direction:column;gap:16px}
+.boxes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 6px;text-align:center}
+.box b{display:block;font-family:var(--f-mono);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.box span{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:600;border-radius:6px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.good{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.btn.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:default}
+select{font:inherit;padding:9px 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);max-width:100%}
+label.lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.chapters{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ch{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ch .nm{font-weight:600;min-width:0}
+.ch .nm small{font-family:var(--f-mono);font-weight:500;color:var(--muted);font-size:.72rem;margin-left:6px}
+.ch .pct{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{grid-column:1/-1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.75rem;color:var(--muted)}
+.ref{font-family:var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:2px 7px;border-radius:4px}
+.kind{text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.q{font-family:var(--f-display);font-size:1.3rem;line-height:1.35;font-weight:500;margin:0;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;font:inherit;padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;line-height:1.4}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--good);background:var(--good-soft);color:var(--ink)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--ink)}
+.opt:disabled{cursor:default}
+.ans{border-left:3px solid var(--accent);padding:4px 0 4px 14px;white-space:pre-line}
+.why{background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:10px 14px;font-size:.92rem;white-space:pre-line}
+.why strong{color:var(--warn)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+.progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.done{text-align:center;padding:28px 20px}
+.done .big{font-family:var(--f-display);font-size:2.4rem;font-weight:700}
+.note{font-size:.82rem;color:var(--muted)}
+.ref-sec{display:flex;flex-direction:column;gap:10px}
+h2{font-family:var(--f-display);font-size:1.25rem;margin:8px 0 0}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.n{font-family:var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums}
+.map dt{font-weight:600;margin-top:10px}
+.map dd{margin:2px 0 0 0;color:var(--muted)}
+.map dd .ref{margin-right:6px}
+@media (max-width:440px){.q{font-size:1.15rem}.card{padding:16px}.box b{font-size:1.05rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Arbowet Trainer</h1>
+      <p class="sub">MVK · Arbeidsomstandighedenwet, versie geldend vanaf 1 juli 2026 · begrippen, uitzonderingen en getallen</p>
+    </div>
+    <div class="sync" id="sync">voortgang: lokaal</div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-home" aria-selected="true" data-tab="home">Oefenen</button>
+    <button role="tab" id="tab-ref" aria-selected="false" data-tab="ref">Overzicht</button>
+  </nav>
+
+  <section class="panel" id="p-home">
+    <div class="boxes" id="boxes"></div>
+    <div class="row">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <label class="lbl" for="mode">Sessie</label>
+        <select id="mode">
+          <option value="due">Herhaling: wat vandaag aan de beurt is</option>
+          <option value="weak">Zwakke plekken</option>
+          <option value="exam">Toetsmodus: 25 meerkeuzevragen</option>
+          <option value="all">Alles in dit hoofdstuk</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <label class="lbl" for="chap">Hoofdstuk</label>
+        <select id="chap"></select>
+      </div>
+    </div>
+    <div class="row"><button class="btn primary" id="start">Start sessie</button><span class="note" id="startnote"></span></div>
+    <div class="chapters" id="chapters"></div>
+    <p class="note">Leitner-schema: bak 1 → morgen, bak 2 → 3 dagen, bak 3 → 7 dagen, bak 4 → 21 dagen, bak 5 = beheerst (na 21 dagen nog eens). Fout = terug naar bak 1. Uitleg met <span class="ref">“praktijk”</span> staat niet letterlijk in de wet.</p>
+  </section>
+
+  <section class="panel" id="p-session" hidden>
+    <div class="progress"><i id="prog" style="width:0"></i></div>
+    <div class="card" id="card"></div>
+    <div class="row"><button class="btn" id="quit">Stop sessie</button></div>
+  </section>
+
+  <section class="panel" id="p-ref" hidden></section>
+</div>
+
+<script>
+const CH = [
+  {k:"h1", n:"Begrippen & reikwijdte", a:"art. 1–2"},
+  {k:"h2", n:"Zorgplicht & arbobeleid", a:"art. 3–11"},
+  {k:"h3", n:"Deskundige bijstand, OR & BHV", a:"art. 12–15a"},
+  {k:"h4", n:"Bijzondere verplichtingen", a:"art. 16–23"},
+  {k:"h5", n:"Toezicht & werkonderbreking", a:"art. 24–31"},
+  {k:"h6", n:"Sancties & slot", a:"art. 32–44"}
+];
+
+/* t: "open" = vrije recall met zelfbeoordeling, "mc" = meerkeuze (eerste optie is juist; wordt geschud) */
+const CARDS = [
+/* ---------- H1 ---------- */
+{id:"b01",h:"h1",art:"1 lid 1",t:"open",q:"Wat is een arbeidsongeval?",
+ a:"Een aan een werknemer in verband met het verrichten van arbeid overkomen ongewilde, plotselinge gebeurtenis, die schade aan de gezondheid tot vrijwel onmiddellijk gevolg heeft gehad en heeft geleid tot ziekteverzuim, of de dood tot vrijwel onmiddellijk gevolg heeft gehad.",
+ x:"Ezelsbrug, 4 kenmerken: ONGEWILD · PLOTSELING · gezondheidsschade VRIJWEL DIRECT · leidt tot VERZUIM of DOOD."},
+{id:"b02",h:"h1",art:"1 lid 1",t:"mc",q:"Na 15 jaar in een lawaaiige fabriek heeft een werknemer gehoorschade. Is dit een arbeidsongeval?",
+ o:["Nee, het is niet plotseling. Dit is een beroepsziekte.","Ja, het is gezondheidsschade door arbeid.","Ja, mits het tot verzuim leidt.","Alleen als de schade blijvend is."],
+ x:"‘Plotseling’ ontbreekt. Langdurige blootstelling leidt tot een beroepsziekte, en die meldt de bedrijfsarts (art. 9 lid 3)."},
+{id:"b03",h:"h1",art:"1 lid 1",t:"mc",q:"Een medewerker verstuikt licht zijn enkel, maar werkt dezelfde dag gewoon door. Valt dit onder de wettelijke definitie van arbeidsongeval?",
+ o:["Nee, de definitie eist dat het heeft geleid tot ziekteverzuim (of de dood).","Ja, er is gezondheidsschade.","Ja, elk letsel op het werk is een arbeidsongeval.","Alleen als een BHV’er hulp heeft verleend."],
+ x:"Lees de definitie letterlijk: ‘…en heeft geleid tot ziekteverzuim’. Zonder verzuim (of dood) valt het er formeel buiten. Intern registreren blijft verstandig."},
+{id:"b04",h:"h1",art:"1 lid 1",t:"open",q:"Wat is psychosociale arbeidsbelasting (PSA), en welke vijf factoren noemt de wet in ieder geval?",
+ a:"De blootstelling aan factoren in de arbeidssituatie die stress teweegbrengen, waaronder in ieder geval:\na. agressie of geweld\nb. direct of indirect onderscheid\nc. pesten\nd. seksuele intimidatie\ne. werkdruk",
+ x:"Ezelsbrug: Agressie · Onderscheid · Pesten · Seksuele intimidatie · Werkdruk = ‘AOPSW’. Beleidsplicht: art. 3 lid 2."},
+{id:"b05",h:"h1",art:"1 lid 1",t:"open",q:"Hoe definieert de Arbowet stress?",
+ a:"Een toestand die als negatief ervaren lichamelijke, psychische of sociale gevolgen heeft.",
+ x:"Drie soorten gevolgen: lichamelijk, psychisch, sociaal."},
+{id:"b06",h:"h1",art:"1 lid 1",t:"open",q:"Wat is een arbeidsplaats?",
+ a:"Iedere plaats die in verband met het verrichten van arbeid wordt of pleegt te worden gebruikt.",
+ x:"Bewust breed: ook een plek die ‘pleegt te worden gebruikt’, dus niet alleen waar op dit moment gewerkt wordt."},
+{id:"b07",h:"h1",art:"1 lid 1",t:"open",q:"Wat zijn arbeidsmiddelen?",
+ a:"Alle op de arbeidsplaats gebruikte machines en verwante producten, installaties, apparaten, gereedschappen, digitale systemen en andere hulpmiddelen om de arbeid te verrichten.",
+ x:"Let op ‘digitale systemen’: die staan in de huidige tekst van de definitie."},
+{id:"b08",h:"h1",art:"1 lid 1 sub b",t:"mc",q:"Een uitzendkracht werkt via een uitzendbureau bij Bouwbedrijf X. Wie is voor de Arbowet de werkgever op de werkplek?",
+ o:["Bouwbedrijf X, de inlener","Het uitzendbureau, want daar ligt het arbeidscontract","Allebei evenveel","Niemand, de uitzendkracht is zelf verantwoordelijk"],
+ x:"Sub a geldt NIET als de werknemer ter beschikking is gesteld aan een derde. Sub b: werkgever is degene aan wie hij ter beschikking is gesteld. Art. 5 lid 5 regelt de informatie die de inlener vooraf aan het uitzendbureau geeft."},
+{id:"b09",h:"h1",art:"1 lid 2",t:"mc",q:"Wie is óók werkgever volgens de uitbreiding in art. 1 lid 2?",
+ o:["Wie zonder arbeidsovereenkomst een ander onder zijn gezag arbeid laat verrichten","Alleen een werkgever met meer dan 25 werknemers","Elke opdrachtgever van een zzp’er","Alleen overheidsorganisaties"],
+ x:"Gezag is het criterium, niet het contract. Denk aan een stagiair. In bij AMvB aangewezen gevallen geldt het ook voor arbeid in een woning zonder gezag (sub b)."},
+{id:"b10",h:"h1",art:"1 lid 2",t:"mc",q:"Is een vrijwilliger een werknemer in de zin van de Arbowet?",
+ o:["Nee, de vrijwilliger is uitgezonderd. Bij bijzondere gevaren kunnen via art. 16 lid 7 wel regels gelden.","Ja, altijd","Alleen bij een sportvereniging","Alleen boven de 18 jaar"],
+ x:"Art. 1 lid 2: werknemer is de ander, ‘met uitzondering van degene die als vrijwilliger arbeid verricht’. Art. 16 lid 7 sub c en d is het achterdeurtje."},
+{id:"b11",h:"h1",art:"1 lid 1",t:"mc",q:"Wie geldt NIET als vrijwilliger, en valt dus wel onder de bescherming als werknemer?",
+ o:["Iemand die een taakstraf uitvoert","Een barvrijwilliger bij de voetbalclub","Een collectant voor een goed doel","Een vrijwillige begeleider in het buurthuis"],
+ x:"Uitzonderingen op ‘vrijwilliger’: (a) voorbereiding op beroepsmatige arbeid, zoals een stage, (b) taakstraf of voorwaarden ter voorkoming van strafvervolging, en (c) arbeid in een justitiële inrichting (art. 16 lid 6 sub c)."},
+{id:"b12",h:"h1",art:"1 lid 1",t:"open",q:"Wat is een zelfstandige, en geldt de Arbowet voor hem?",
+ a:"Degene die zonder werkgever of werknemer te zijn arbeid verricht.\n\nIn principe niet, maar bij AMvB kunnen voorschriften ook voor zelfstandigen gelden bij arbeid met bijzondere gevaren (art. 16 lid 7).",
+ x:"Typisch voorbeeld uit de praktijk: een zzp’er op de bouwplaats."},
+{id:"b13",h:"h1",art:"2",t:"open",q:"Op welke vier situaties wordt de Arbowet in art. 2 uitgebreid?",
+ a:"a. arbeid binnen de exclusieve economische zone (EEZ)\nb. verrichtingen van leerlingen en studenten in onderwijsinstellingen, voor zover vergelijkbaar met arbeid in de beroepspraktijk\nc. arbeid aan boord van zeeschepen onder Nederlandse vlag, ook buiten Nederland\nd. arbeid aan boord van luchtvaartuigen voor een in Nederland gevestigde werkgever, ook buiten Nederland",
+ x:"Ezelsbrug: Zee-zone · School · Schip · Sky."},
+{id:"b14",h:"h1",art:"2 sub b",t:"mc",q:"Een mbo-student doet een practicum met chemicaliën in het schoollab. Geldt de Arbowet?",
+ o:["Ja, het is vergelijkbaar met arbeid in de beroepspraktijk (art. 2 sub b).","Nee, een student is geen werknemer.","Alleen als hij stagevergoeding krijgt.","Alleen bij een BBL-opleiding."],
+ x:"Let op: art. 16 lid 4 sub c maakt het mogelijk om bij AMvB onderdelen voor onderwijs juist weer uit te zonderen."},
+{id:"b15",h:"h1",art:"1 lid 1 / 14a",t:"open",q:"Wat is een arbodienst volgens de Arbowet?",
+ a:"Een dienst als bedoeld in art. 14a lid 2 en 3: een gecertificeerde arbodienst, binnen het bedrijf of extern.",
+ x:"De arbodienst is het vangnet als deskundige bijstand niet via maatwerk (cao of OR-regeling) is georganiseerd."},
+
+/* ---------- H2 ---------- */
+{id:"z01",h:"h2",art:"3 lid 1 sub b",t:"open",q:"Noem de volgorde van de arbeidshygiënische strategie.",
+ a:"1. Bron: gevaar bij de bron voorkomen of beperken\n2. Collectieve maatregelen\n3. Individuele maatregelen\n4. Persoonlijke beschermingsmiddelen (PBM)\n\nElke stap tenzij die ‘redelijkerwijs niet kan worden gevergd’.",
+ x:"Ezelsbrug: Bron → Collectief → Individu → PBM. PBM is altijd het laatste redmiddel."},
+{id:"z02",h:"h2",art:"3 lid 1",t:"mc",q:"Wanneer mag de werkgever een hogere stap van de strategie overslaan?",
+ o:["Als die stap redelijkerwijs niet kan worden gevergd","Als PBM goedkoper zijn","Als de werknemers zelf liever PBM gebruiken","Nooit"],
+ x:"‘Tenzij dit redelijkerwijs niet kan worden gevergd’ is DE ontsnappingsclausule van art. 3. De werkgever moet dat (technisch, organisatorisch of economisch) kunnen onderbouwen, liefst in de RI&E."},
+{id:"z03",h:"h2",art:"3 lid 1 sub b",t:"mc",q:"Een machine maakt te veel lawaai. Wat is volgens de strategie de eerste maatregel?",
+ o:["De machine vervangen door een stillere","Een geluidsscherm tussen machine en werkplekken","De tijd per werknemer bij de machine beperken","Gehoorbescherming uitdelen"],
+ x:"Bron eerst. Scherm = collectief, tijdsbeperking = individueel/organisatorisch, gehoorbescherming = PBM."},
+{id:"z04",h:"h2",art:"3 lid 1",t:"open",q:"Art. 3 lid 1 noemt zes punten (a–f) waarop de werkgever let. Welke?",
+ a:"a. arbeid zo organiseren dat er geen nadelige invloed op veiligheid en gezondheid is\nb. de arbeidshygiënische strategie (bron → collectief → individueel → PBM)\nc. werkplek, werkmethoden, arbeidsmiddelen en arbeidsinhoud aanpassen aan persoonlijke eigenschappen\nd. monotone en tempogebonden arbeid vermijden of beperken\ne. eerste hulp, brandbestrijding en evacuatie, plus verbindingen met externe hulpdiensten\nf. elke werknemer moet bij ernstig en onmiddellijk gevaar zelf passende maatregelen kunnen nemen",
+ x:"Sub e is de grondslag voor BHV (art. 15). Sub f verwijst naar de werkonderbreking (art. 29)."},
+{id:"z05",h:"h2",art:"3 lid 2",t:"mc",q:"Waar staat dat de werkgever beleid moet voeren om psychosociale arbeidsbelasting te voorkomen of te beperken?",
+ o:["Art. 3 lid 2","Art. 5 lid 1","Art. 8 lid 1","Art. 12 lid 2"],
+ x:"Art. 3 lid 2: binnen het algemene arbobeleid een beleid gericht op voorkoming en, als dat niet kan, beperking van PSA."},
+{id:"z06",h:"h2",art:"3 lid 3–4",t:"open",q:"Wat regelen art. 3 lid 3 en lid 4?",
+ a:"Lid 3: een goede verdeling van bevoegdheden en verantwoordelijkheden, rekening houdend met de bekwaamheden van werknemers.\nLid 4: het arbobeleid regelmatig toetsen aan de opgedane ervaringen en de maatregelen zo vaak aanpassen als nodig.",
+ x:"Lid 4 is de ‘check-act’ van de beleidscyclus."},
+{id:"z07",h:"h2",art:"4",t:"open",q:"Waar gaat art. 4 over?",
+ a:"Aanpassing van werkplek, werkmethoden, arbeidsmiddelen, arbeidsinhoud en zo nodig de inrichting van het bedrijf voor een werknemer die door ziekte de bedongen arbeid niet kan verrichten. Dit hoort bij de re-integratietaak (BW 7:658a, Ziektewet art. 76e).",
+ x:"Het geldt ook voor de eigenrisicodrager voor de Ziektewet, zolang die ziekengeld betaalt (lid 2)."},
+{id:"z08",h:"h2",art:"5 lid 1–3",t:"open",q:"Wat moet er volgens art. 5 in de RI&E staan?",
+ a:"• schriftelijk vastgelegd welke risico’s de arbeid meebrengt\n• beschrijving van gevaren en risicobeperkende maatregelen\n• risico’s voor bijzondere categorieën werknemers\n• aandacht voor de toegang tot de deskundige (preventiemedewerker, bedrijfsarts/kerndeskundige) of de arbodienst\n• een plan van aanpak: welke maatregelen, hun samenhang en binnen welke termijn",
+ x:"Schriftelijk is een harde eis. Het plan van aanpak hoort bij de RI&E."},
+{id:"z09",h:"h2",art:"5 lid 3",t:"mc",q:"Is het plan van aanpak een los document naast de RI&E?",
+ o:["Nee, het maakt deel uit van de RI&E en noemt maatregelen en termijnen.","Ja, het wordt apart opgesteld door de OR.","Ja, het hoeft pas na de toetsing gemaakt te worden.","Het is optioneel."],
+ x:"‘Een plan van aanpak … maakt deel uit van de risico-inventarisatie en -evaluatie.’ Zonder termijnen is het plan niet compleet."},
+{id:"z10",h:"h2",art:"5 lid 4",t:"mc",q:"Hoe vaak moet de RI&E volgens de Arbowet worden geactualiseerd?",
+ o:["Zo vaak als ervaring, gewijzigde werkmethoden of omstandigheden, of de stand van wetenschap en professionele dienstverlening daartoe aanleiding geven","Elke 4 jaar","Elk jaar","Alleen na een ernstig ongeval"],
+ x:"VALKUIL: de wet noemt geen vaste termijn. Antwoorden als ‘elke 4 jaar’ zijn fout."},
+{id:"z11",h:"h2",art:"5 lid 5",t:"mc",q:"Een bedrijf huurt een uitzendkracht in. Wat moet het bedrijf volgens art. 5 lid 5 doen?",
+ o:["Tijdig vóór aanvang de beschrijving van gevaren, maatregelen en risico’s van de werkplek aan het uitzendbureau geven, dat die doorgeeft aan de werknemer","De volledige RI&E naar de uitzendkracht mailen na de eerste werkdag","Niets, dat regelt het uitzendbureau","De RI&E laten toetsen door het uitzendbureau"],
+ x:"Let op de route: inlener → uitlener (uitzendbureau) → werknemer, en wel vóór de start."},
+{id:"z12",h:"h2",art:"5 lid 6",t:"mc",q:"Wie moet kennis kunnen nemen van de RI&E?",
+ o:["Iedere werknemer","Alleen de OR","Alleen de preventiemedewerker en de bedrijfsarts","Alleen de toezichthouder"],
+ x:"Art. 5 lid 6: de werkgever zorgt dat iedere werknemer er kennis van kan nemen."},
+{id:"z13",h:"h2",art:"6",t:"open",q:"Waar gaat art. 6 over, en wat is bijzonder aan de boete?",
+ a:"Voorkoming en beperking van zware ongevallen waarbij gevaarlijke stoffen zijn betrokken. De uitwerking volgt bij AMvB (in de praktijk het Brzo).\nDe maximale boete is de 6e categorie (art. 34 lid 4) in plaats van de 5e.",
+ x:"Achtergrond: de Seveso-richtlijn 2012/18/EU (genoemd in art. 7). Art. 7 regelt de informatie aan het publiek."},
+{id:"z14",h:"h2",art:"8",t:"open",q:"Wat moet de werkgever regelen onder ‘voorlichting en onderricht’ (art. 8)?",
+ a:"1. werknemers doeltreffend inlichten over werkzaamheden, risico’s en maatregelen, en over hoe de deskundige bijstand is georganiseerd\n2. onderricht aangepast aan hun taken\n3. zorgen dat ze doel, werking en gebruik van PBM en beveiligingen kennen\n4. toezien op naleving van instructies en het juiste gebruik van PBM\n5. extra aandacht voor werknemers jonger dan 18",
+ x:"Lid 4 is belangrijk: alleen instrueren is niet genoeg, de werkgever moet ook TOEZIEN op naleving."},
+{id:"z15",h:"h2",art:"8 lid 5",t:"mc",q:"Welke groep noemt art. 8 uitdrukkelijk voor extra aandacht bij voorlichting en onderricht?",
+ o:["Werknemers jonger dan 18 jaar","Zwangere werknemers","Uitzendkrachten","Werknemers ouder dan 55"],
+ x:"Reden: beperkte werkervaring en een onvoltooide lichamelijke en geestelijke ontwikkeling. Zwangerschap is elders geregeld (Arbobesluit)."},
+{id:"z16",h:"h2",art:"9 lid 1",t:"mc",q:"Welke arbeidsongevallen moet de werkgever DIRECT melden bij de toezichthouder?",
+ o:["Ongevallen met de dood, blijvend letsel of een ziekenhuisopname","Elk ongeval met verzuim","Ongevallen met meer dan 3 werkdagen verzuim","Alleen dodelijke ongevallen"],
+ x:"Ezelsbrug: D-B-Z, Dood · Blijvend letsel · Ziekenhuisopname. In de praktijk is de toezichthouder de Nederlandse Arbeidsinspectie."},
+{id:"z17",h:"h2",art:"9 lid 2",t:"mc",q:"Welke ongevallen moeten op de ongevallenregistratie (de lijst) van de werkgever?",
+ o:["De gemelde ongevallen plus ongevallen met meer dan drie werkdagen verzuim, met aard en datum","Alleen de gemelde ongevallen","Alle ongevallen, ook bijna-ongevallen","Ongevallen met meer dan één week verzuim"],
+ x:"VALKUIL: melden (D-B-Z) en registreren (dat plus meer dan 3 werkdagen verzuim) zijn twee verschillende verplichtingen."},
+{id:"z18",h:"h2",art:"9 lid 3",t:"mc",q:"Wie meldt beroepsziekten, en bij wie?",
+ o:["De bedrijfsarts (of de arbodienst), bij een door de minister aangewezen instelling","De werkgever, bij de Arbeidsinspectie","De werknemer zelf, bij UWV","De preventiemedewerker, bij de OR"],
+ x:"VALKUIL: niet de werkgever. In de praktijk is de aangewezen instelling het NCvB (Nederlands Centrum voor Beroepsziekten); die naam staat niet in de wet."},
+{id:"z19",h:"h2",art:"9 lid 5",t:"mc",q:"Mag de werkgever voor een ongevalsmelding gezondheidsgegevens van de werknemer verwerken?",
+ o:["Ja, voor zover dat nodig is voor de meldplicht van lid 1 (uitzondering op het AVG-verbod)","Nee, nooit","Alleen met schriftelijke toestemming van de werknemer","Alleen via de bedrijfsarts"],
+ x:"Art. 9 lid 5 maakt een uitzondering op het verbod uit art. 9 AVG. Die geldt alleen voor wat noodzakelijk is voor de melding."},
+{id:"z20",h:"h2",art:"10",t:"open",q:"Wat regelt art. 10 (gevaar voor derden)?",
+ a:"Als bij of in rechtstreeks verband met de arbeid, in het bedrijf of de onmiddellijke omgeving, gevaar kan ontstaan voor andere personen dan de eigen werknemers, neemt de werkgever doeltreffende maatregelen om dat gevaar te voorkomen.",
+ x:"Derden zijn bijvoorbeeld bezoekers, klanten, passanten en werknemers van andere bedrijven. Koppel dit aan je studiestuk over risico’s van derden."},
+{id:"z21",h:"h2",art:"10",t:"mc",q:"Op een bedrijfsterrein rijden heftrucks. Bezoekers lopen er langs. Op welk artikel baseert de werkgever maatregelen voor die bezoekers?",
+ o:["Art. 10","Art. 11","Art. 19","Art. 3 lid 2"],
+ x:"Art. 10 gaat over gevaar voor anderen dan de eigen werknemers. Art. 19 gaat over samenwerking tussen verschillende werkgevers."},
+{id:"z22",h:"h2",art:"11",t:"open",q:"Noem de verplichtingen van de werknemer uit art. 11 (a–f).",
+ a:"a. arbeidsmiddelen en gevaarlijke stoffen juist gebruiken\nb. PBM juist gebruiken en na gebruik op de juiste plaats opbergen\nc. beveiligingen niet veranderen of onnodig weghalen, en juist gebruiken\nd. meewerken aan onderricht (art. 8)\ne. opgemerkte gevaren direct melden aan de werkgever of leidinggevende\nf. werkgever, preventiemedewerker, deskundigen en arbodienst zo nodig bijstaan",
+ x:"Algemeen: naar vermogen zorgen voor de eigen veiligheid en gezondheid en die van anderen, volgens opleiding en instructies."},
+{id:"z23",h:"h2",art:"11 / 33",t:"mc",q:"Kan een werknemer een bestuurlijke boete krijgen op grond van de Arbowet?",
+ o:["Ja, het niet naleven van art. 11 is een overtreding (art. 33 lid 1)","Nee, alleen de werkgever kan beboet worden","Alleen als er een ongeval is gebeurd","Alleen via het strafrecht"],
+ x:"Art. 33 lid 1 noemt art. 11 expliciet. Voorbeeld: een werknemer die een machinebeveiliging verwijdert (art. 11 sub c)."},
+
+/* ---------- H3 ---------- */
+{id:"d01",h:"h3",art:"12 lid 1",t:"mc",q:"Met wie overlegt de werkgever over het arbobeleid als er geen OR en geen PVT is?",
+ o:["Met de belanghebbende werknemers","Met de bedrijfsarts","Met de Arbeidsinspectie","Met niemand, overleg is dan niet verplicht"],
+ x:"OR of PVT heeft ook het recht om voorstellen te doen. Ontbreken die, dan worden de belanghebbende werknemers geraadpleegd."},
+{id:"d02",h:"h3",art:"12 lid 2",t:"open",q:"Welke zes onderwerpen komen volgens art. 12 lid 2 in ieder geval aan de orde in het overleg met de OR?",
+ a:"a. de aanwijzing van BHV’ers (art. 15)\nb. de RI&E (art. 5)\nc. de organisatie van deskundige bijstand, oftewel de preventiemedewerker (art. 13)\nd. aanvullende deskundige bijstand (art. 14)\ne. de arbodienst\nf. de voorlichting van werknemers over werk en risico’s (art. 8)",
+ x:"Ezelsbrug: BHV · RI&E · Preventie · Deskundigen · Arbodienst · Voorlichting."},
+{id:"d03",h:"h3",art:"12 lid 3",t:"mc",q:"Welk recht hebben OR-leden als de toezichthouder op bezoek komt?",
+ o:["De toezichthouder buiten aanwezigheid van anderen spreken en hem vergezellen, tenzij hij daartegen bezwaar heeft","Het bezoek weigeren","Het inspectierapport goedkeuren voordat het verstuurd wordt","Alleen achteraf een samenvatting krijgen"],
+ x:"Het meelopen kan de toezichthouder weigeren als dat zijn taakuitoefening hindert."},
+{id:"d04",h:"h3",art:"13 lid 7",t:"open",q:"Wat zijn volgens art. 13 lid 7 de taken van de preventiemedewerker (deskundige werknemer)?",
+ a:"a. meewerken aan het verrichten en opstellen van de RI&E\nb. adviseren aan en nauw samenwerken met de bedrijfsarts/kerndeskundigen en de OR/PVT (of de belanghebbende werknemers) over maatregelen\nc. de maatregelen uitvoeren of daaraan meewerken",
+ x:"Ezelsbrug: RI&E · Adviseren · Uitvoeren. Een afschrift van het advies gaat naar de werkgever (lid 8)."},
+{id:"d05",h:"h3",art:"13 lid 1",t:"mc",q:"Welk recht heeft de OR bij de preventiemedewerker?",
+ o:["Instemmingsrecht op de keuze van de persoon én op diens positionering","Alleen adviesrecht","Geen enkel recht","Instemmingsrecht alleen op de persoon"],
+ x:"‘De keuze … en diens positionering, bepaald met instemming van die ondernemingsraad’. Beide dus."},
+{id:"d06",h:"h3",art:"13 lid 10",t:"mc",q:"Wanneer mag de werkgever zelf (of de directeur) de preventietaken uitvoeren?",
+ o:["Bij niet meer dan 25 werknemers, als hij voldoende deskundigheid, ervaring en uitrusting heeft","Bij minder dan 10 werknemers","Altijd, als de OR instemt","Nooit"],
+ x:"Getal om te onthouden: 25. Bij een rechtspersoon is het de directeur."},
+{id:"d07",h:"h3",art:"13 lid 1–3",t:"mc",q:"In welke volgorde organiseert de werkgever de preventiebijstand?",
+ o:["Eerst eigen deskundige werknemers, dan een combinatie met externe deskundigen, dan alleen externe","Eerst een externe arbodienst, dan eigen werknemers","Vrije keuze","Altijd via de bedrijfsarts"],
+ x:"Intern gaat voor extern. Extern mag alleen voor zover de mogelijkheden binnen het bedrijf onvoldoende zijn of ontbreken."},
+{id:"d08",h:"h3",art:"14 lid 1",t:"open",q:"Voor welke taken moet de werkgever een gecertificeerde deskundige of bedrijfsarts inschakelen (art. 14 lid 1)?",
+ a:"a. de RI&E toetsen en daarover adviseren\nb. adviseren bij de begeleiding van zieke werknemers (verzuim, re-integratie)\nc. uitvoeren van:\n   1° het arbeidsgezondheidskundig onderzoek (PAGO, art. 18)\n   2° de aanstellingskeuring, als de werkgever die laat doen\n   3° consultatie over gezondheidsvragen in verband met het werk (spreekuur)",
+ x:"Ezelsbrug: Toetsen · Verzuim · Onderzoek/Keuring/Spreekuur."},
+{id:"d09",h:"h3",art:"14 lid 1",t:"mc",q:"Mag jij als MVK’er de RI&E van een bedrijf toetsen?",
+ o:["Nee, toetsen vereist een gecertificeerde (kern)deskundige of een geregistreerde bedrijfsarts","Ja, de MVK is daarvoor bedoeld","Ja, bij bedrijven onder de 25 werknemers","Alleen samen met de OR"],
+ x:"Praktijk: de gecertificeerde kerndeskundigen zijn de hogere veiligheidskundige (HVK), arbeidshygiënist, A&O-deskundige en de bedrijfsarts. Een MVK’er helpt wel bij het opstellen van de RI&E."},
+{id:"d10",h:"h3",art:"14 lid 12",t:"open",q:"Welke twee uitzonderingen kent de toetsplicht van de RI&E?",
+ a:"a. werkgevers bij wie alle werknemers samen in totaal ten hoogste 40 uur per week werken, of\nb. werkgevers met in de regel ten hoogste 25 werknemers die een erkend instrument gebruiken: een model in een cao of regeling, of een instrument dat bij de minister (of een aangewezen instelling) is aangemeld",
+ x:"Getallen: 40 uur per week in totaal en 25 werknemers. In de praktijk gaat het om de erkende branche-RI&E."},
+{id:"d11",h:"h3",art:"14 lid 12",t:"mc",q:"Een bakkerij met 18 werknemers gebruikt de erkende branche-RI&E. Moet de RI&E getoetst worden?",
+ o:["Nee, ≤ 25 werknemers met een erkend instrument","Ja, toetsing is altijd verplicht","Ja, omdat het meer dan 40 uur per week is","Alleen als de OR erom vraagt"],
+ x:"Uitzondering b van lid 12. Dat het meer dan 40 uur is maakt niet uit: uitzondering b staat los van uitzondering a."},
+{id:"d12",h:"h3",art:"14 lid 12",t:"mc",q:"Een kantoor heeft 3 parttimers van elk 12 uur per week en gebruikt GEEN erkend instrument. Toetsing nodig?",
+ o:["Nee, in totaal 36 uur per week (≤ 40)","Ja, want er is geen erkend instrument","Ja, toetsing is altijd verplicht","Alleen als er een ongeval is geweest"],
+ x:"Uitzondering a telt alle uren van alle werknemers samen."},
+{id:"d13",h:"h3",art:"14 lid 12",t:"mc",q:"Een installatiebedrijf met 30 werknemers gebruikt de erkende branche-RI&E. Toetsing nodig?",
+ o:["Ja, boven de 25 werknemers vervalt de uitzondering","Nee, een erkend instrument is genoeg","Nee, mits de OR instemt","Alleen bij nieuwe risico’s"],
+ x:"De grens van 25 werknemers is hard."},
+{id:"d14",h:"h3",art:"14 lid 2",t:"open",q:"Welke eisen stelt art. 14 lid 2 aan de bedrijfsarts in het (basis)contract?",
+ a:"e. doeltreffende toegang tot de bedrijfsarts\nf. de bedrijfsarts kan iedere arbeidsplaats bezoeken\ng. second opinion: een verzoek van de werknemer om een andere bedrijfsarts te raadplegen wordt gehonoreerd, tenzij zwaarwegende argumenten zich verzetten\nh. een adequate klachtenprocedure\ni. nauw samenwerken met de preventiemedewerker en de OR\nj. adviseren over preventieve maatregelen",
+ x:"Het overtreden van g, h en j is een overtreding van de BEDRIJFSARTS zelf (lid 15)."},
+{id:"d15",h:"h3",art:"14 lid 2 sub g",t:"mc",q:"Een werknemer is het niet eens met het advies van de bedrijfsarts en wil een andere bedrijfsarts raadplegen. Wat geldt?",
+ o:["De bedrijfsarts honoreert dit zo spoedig mogelijk, tenzij zwaarwegende argumenten zich verzetten","De werkgever beslist","Dat kan alleen via UWV","Alleen als de OR instemt"],
+ x:"Dit is de second opinion. Het geldt voor adviezen over verzuimbegeleiding (b) en over onderzoek/keuring/consultatie (c)."},
+{id:"d16",h:"h3",art:"14 lid 3",t:"mc",q:"Aan wie stuurt de deskundige een afschrift van het toetsingsadvies over de RI&E?",
+ o:["Aan de OR of PVT. Zonder OR stuurt de werkgever het zo spoedig mogelijk aan de belanghebbende werknemers","Alleen aan de werkgever","Aan de Arbeidsinspectie","Aan alle werknemers persoonlijk"],
+ x:"Let op wie het doet: de opsteller van het advies stuurt het naar de OR."},
+{id:"d17",h:"h3",art:"14 lid 9 / 14a",t:"mc",q:"Wat geldt als de deskundige bijstand NIET is geregeld via een cao of een regeling met de OR?",
+ o:["De vangnetregeling: bijstand door een gecertificeerde arbodienst (intern, anders extern)","Dan is geen bijstand nodig","De werkgever kiest vrij een bedrijfsarts zonder voorwaarden","De Arbeidsinspectie wijst iemand aan"],
+ x:"Maatwerk (art. 14) of vangnet (art. 14a)."},
+{id:"d18",h:"h3",art:"14 lid 10–11",t:"mc",q:"Een cao en een regeling met de OR over deskundige bijstand spreken elkaar tegen. Wat gaat voor, en hoe lang gelden zulke regelingen?",
+ o:["De cao gaat voor. Regelingen gelden maximaal 5 jaar.","De OR-regeling gaat voor. Ze gelden 3 jaar.","De strengste gaat voor. Ze gelden onbepaald.","De werkgever kiest. Ze gelden 1 jaar."],
+ x:"Lid 10: bij strijd gaat de cao voor. Lid 11: geldig 5 jaar vanaf de ingangsdatum. Wordt de regeling eerder gewijzigd, dan eindigt die periode op dat moment."},
+{id:"d19",h:"h3",art:"15 lid 2",t:"open",q:"Wat zijn de drie wettelijke kerntaken van de BHV?",
+ a:"a. eerste hulp bij ongevallen verlenen\nb. brand beperken en bestrijden, en de gevolgen van ongevallen beperken\nc. in noodsituaties alle werknemers en andere personen in het bedrijf alarmeren en evacueren",
+ x:"Ezelsbrug: EHBO · Brand · Alarmeren/Evacueren. Let op ‘alle werknemers EN andere personen’, dus ook bezoekers."},
+{id:"d20",h:"h3",art:"15 lid 3",t:"mc",q:"Hoeveel BHV’ers schrijft de Arbowet voor?",
+ o:["Geen vast aantal: opleiding, uitrusting, aantal en organisatie zodanig dat de taken naar behoren worden vervuld","1 per 50 werknemers","1 per verdieping","Minimaal 2 per vestiging"],
+ x:"VALKUIL: vuistregels zoals ‘1 op 50’ staan niet in de wet. Het aantal volgt uit de RI&E."},
+{id:"d21",h:"h3",art:"15a",t:"mc",q:"Wie hebben volgens art. 15a recht op inzage in ongevalsrapportages, eisen, stilleggingsbevelen en boeterapporten?",
+ o:["Preventiemedewerker en andere deskundigen, bedrijfsarts/kerndeskundigen, BHV’ers en de arbodienst","Alleen de OR","Alle werknemers","Alleen de directie"],
+ x:"Art. 15a gaat over de informatierechten van de deskundigen, inclusief de BHV’ers."},
+
+/* ---------- H4 ---------- */
+{id:"v01",h:"h4",art:"16",t:"mc",q:"Waar zijn de gedetailleerde arboregels uitgewerkt, zoals voor gevaarlijke stoffen, fysieke belasting en PBM?",
+ o:["In het Arbobesluit (een AMvB op grond van art. 16), verder uitgewerkt in de Arboregeling","In de Arbowet zelf","Alleen in NEN-normen","In de cao"],
+ x:"Wetgevingspiramide: Arbowet (doelen) → Arbobesluit (AMvB) → Arboregeling (ministeriële regeling). Beleidsregels en arbocatalogi zijn invulling."},
+{id:"v02",h:"h4",art:"16 lid 4",t:"mc",q:"Voor welke arbeid kan de Arbowet NIET bij AMvB (deels) buiten toepassing worden verklaard?",
+ o:["Arbeid in de zorg","Arbeid in militaire dienst","Arbeid aan boord van een zeeschip of luchtvaartuig","Arbeid in de exclusieve economische zone"],
+ x:"Lid 4 noemt: (a) luchtvaartuig, zeeschip, binnenvaartuig, voertuig op de openbare weg, spoor/tram; (b) militaire dienst; (c) onderwijs; (d) mijnbouw; (e) EEZ."},
+{id:"v03",h:"h4",art:"16 lid 7",t:"mc",q:"Gelden arboregels ook voor een zzp’er op een bouwplaats?",
+ o:["Ja, voor zover een AMvB voorschriften ook op zelfstandigen van toepassing verklaart bij arbeid met bijzondere gevaren","Nee, nooit","Ja, de hele Arbowet","Alleen als hij personeel heeft"],
+ x:"Art. 16 lid 7 richt zich op (a) de zelfstandige, (b) de werkgever die zelf meewerkt, (c) degene bij wie vrijwilligers werken en (d) de vrijwilliger."},
+{id:"v04",h:"h4",art:"16 lid 8",t:"mc",q:"Kan een arboplicht ook rusten op iemand anders dan de werkgever?",
+ o:["Ja, bij AMvB bijvoorbeeld op de eigenaar of beheerder, of degene die beslist over ontwerp, vervaardiging of onderhoud van arbeidsplaatsen en arbeidsmiddelen","Nee, alleen de werkgever","Alleen op de werknemer","Alleen op de toezichthouder"],
+ x:"Praktijk: in de bouw rusten plichten ook op opdrachtgever en ontwerper."},
+{id:"v05",h:"h4",art:"17",t:"mc",q:"Hoe kan op een andere manier dan voorgeschreven aan een arbovoorschrift worden voldaan (maatwerk, art. 17)?",
+ o:["Alleen via een cao of een regeling met de OR/PVT, en zonder afbreuk aan het beschermingsniveau","Via een besluit van de directie","Met toestemming van de bedrijfsarts","Door een lager beschermingsniveau af te spreken met de werknemer"],
+ x:"Het beschermingsniveau mag nooit omlaag."},
+{id:"v06",h:"h4",art:"18",t:"mc",q:"Is een werknemer verplicht mee te doen aan het periodiek arbeidsgezondheidskundig onderzoek (PAGO)?",
+ o:["Nee, de werkgever moet de werknemer periodiek IN DE GELEGENHEID STELLEN","Ja, altijd","Ja, vanaf 45 jaar","Alleen als de bedrijfsarts dat bepaalt"],
+ x:"Art. 18 legt een aanbodplicht op de werkgever. Uitvoering: een gecertificeerde deskundige of bedrijfsarts (art. 14 lid 1 sub c)."},
+{id:"v07",h:"h4",art:"19",t:"open",q:"Wat regelt art. 19 als verschillende werkgevers op dezelfde locatie werken?",
+ a:"Lid 1: ze werken doelmatig samen om de naleving te verzekeren.\nLid 2: bij bij AMvB aangewezen categorieën werkzaamheden leggen ze vóór aanvang schriftelijk vast hoe ze samenwerken, welke voorzieningen er komen en hoe op die voorzieningen toezicht wordt gehouden.",
+ x:"Typische voorbeelden: een bouwplaats of onderaannemers in een fabriek. Koppel dit aan je studiestuk over risico’s van derden."},
+{id:"v08",h:"h4",art:"20",t:"open",q:"Wat regelt art. 20 over certificatie?",
+ a:"Bij AMvB kan worden geëist dat werkgevers, werknemers, personen of instellingen een certificaat hebben. Dat certificaat wordt afgegeven door de minister of een aangewezen instelling, geldt voor een beperkte tijd, kan voorschriften bevatten en kan worden geschorst of ingetrokken.",
+ x:"Voorbeelden: kerndeskundigen, arbodiensten en asbestverwijderaars. Art. 21–23 en 25 gaan over het toezicht van de minister op de certificerende instellingen."},
+
+/* ---------- H5 ---------- */
+{id:"t01",h:"h5",art:"24 lid 3",t:"mc",q:"Mag de toezichthouder een woning binnengaan zonder toestemming van de bewoner?",
+ o:["Ja, art. 24 lid 3 geeft die bevoegdheid, met medeneming van de benodigde apparatuur","Nee, nooit zonder toestemming","Alleen met een machtiging van de rechter","Alleen samen met de politie"],
+ x:"VALKUIL: dit is een uitzonderlijk ruime bevoegdheid."},
+{id:"t02",h:"h5",art:"24 lid 4–5",t:"mc",q:"Na een onderzoek naar een arbeidsongeval: naar wie stuurt de toezichthouder het rapport?",
+ o:["Naar de werkgever, de OR/PVT en, indien van toepassing, de bij het ongeval betrokken persoon of personen","Alleen naar de werkgever","Alleen naar het Openbaar Ministerie","Naar alle werknemers"],
+ x:"De toezichthouder mag ‘te allen tijde’ een onderzoek instellen naar een arbeidsongeval."},
+{id:"t03",h:"h5",art:"24 lid 7",t:"mc",q:"Wie kan de toezichthouder verzoeken om een onderzoek in te stellen, waarop hij zo spoedig mogelijk moet reageren?",
+ o:["De OR/PVT of een vakbond die in de onderneming of bedrijfstak actief is","Elke individuele werknemer","Alleen de werkgever","Alleen de bedrijfsarts"],
+ x:"Een individuele werknemer kan natuurlijk een klacht indienen (zie art. 26), maar het genoemde verzoekrecht hebben OR/PVT en vakbond."},
+{id:"t04",h:"h5",art:"26",t:"mc",q:"Een werknemer dient een klacht in bij de Arbeidsinspectie. Mag de toezichthouder zijn naam aan de werkgever noemen?",
+ o:["Nee, tenzij de klager schriftelijk heeft verklaard daartegen geen bezwaar te hebben","Ja, altijd","Ja, als de werkgever erom vraagt","Alleen na afloop van het onderzoek"],
+ x:"De geheimhoudingsplicht beschermt de melder. Alleen schriftelijke toestemming heft haar op."},
+{id:"t05",h:"h5",art:"27",t:"open",q:"Wat is een ‘eis tot naleving’ (art. 27)?",
+ a:"Een eis van een aangewezen toezichthouder over de wijze waarop een of meer bepalingen moeten worden nageleefd. De eis vermeldt de regels en de termijn. De werkgever moet voldoen, de werknemers voor zover de eis dat bepaalt. De werkgever informeert de werknemers zo spoedig mogelijk.",
+ x:"Een eis is een lichter middel dan een stillegging. Na een gestelde eis kan voor dat voorschrift geen ontheffing meer worden verleend (art. 30 lid 2)."},
+{id:"t06",h:"h5",art:"28",t:"mc",q:"Wanneer mag de toezichthouder het werk stilleggen (art. 28)?",
+ o:["Als verblijf of werkzaamheden naar zijn redelijk oordeel ernstig gevaar voor personen opleveren","Bij elke overtreding","Pas na een ongeval","Alleen na een eerdere eis tot naleving"],
+ x:"Mondeling of bij gedagtekend schrijven. Een mondeling bevel wordt zo spoedig mogelijk schriftelijk bevestigd. Het kan ook als een eis nog niet uitgevoerd hoeft te zijn (lid 3)."},
+{id:"t07",h:"h5",art:"28 lid 4–5",t:"mc",q:"Wat mag de toezichthouder bij een stilleggingsbevel, en wanneer trekt hij het in?",
+ o:["Maatregelen nemen zoals verzegelen, en de sterke arm inroepen. Hij trekt het in zodra er naar zijn oordeel geen ernstig gevaar meer is.","Alleen een boete opleggen. Het bevel geldt standaard 3 maanden.","Niets afdwingen. Het bevel vervalt na 24 uur.","Alleen waarschuwen. Het bevel vervalt na een week."],
+ x:"Iedereen die het aangaat moet zich aan het bevel houden (lid 6). Lid 7 breidt dit uit naar epidemieën van A1-infectieziekten."},
+{id:"t08",h:"h5",art:"28a",t:"mc",q:"Hoe lang mag een stillegging wegens recidive (art. 28a) maximaal duren?",
+ o:["Ten hoogste drie maanden","Ten hoogste één maand","Ten hoogste zes maanden","Onbeperkt"],
+ x:"Vooraf moet een schriftelijke waarschuwing zijn gegeven. Het bevel komt pas als voor de eerste overtreding een boete is opgelegd of een proces-verbaal is opgemaakt."},
+{id:"t09",h:"h5",art:"28a lid 4",t:"mc",q:"Na hoeveel tijd vervalt de waarschuwing van art. 28a?",
+ o:["Vijf jaar na de dagtekening","Eén jaar","Drie jaar","Tien jaar"],
+ x:"5 jaar. Verwar het niet met de recidivetermijn voor boetes (5 jaar, of 10 jaar bij ernstige overtredingen, art. 34)."},
+{id:"t10",h:"h5",art:"29 lid 1",t:"mc",q:"Wanneer mag een werknemer zelf het werk onderbreken (art. 29)?",
+ o:["Als er naar zijn redelijk oordeel ernstig gevaar is EN dat zo onmiddellijk dreigt dat de toezichthouder niet tijdig kan optreden","Bij elk onveilig gevoel","Alleen met toestemming van de leidinggevende","Alleen na overleg met de OR"],
+ x:"Twee voorwaarden: ernstig gevaar én zo acuut dat de inspectie niet op tijd kan komen."},
+{id:"t11",h:"h5",art:"29 lid 1–2",t:"mc",q:"Wat zijn de rechten van de werknemer tijdens een werkonderbreking, en wie moet wat bewijzen?",
+ o:["Hij behoudt zijn loon en mag niet worden benadeeld. Wie stelt dat hij het gevaar niet redelijkerwijs mocht aannemen, moet dat bewijzen.","Geen loon. De werknemer moet het gevaar bewijzen.","Loon alleen als de inspectie hem gelijk geeft","Hij behoudt zijn loon, maar moet zelf het gevaar aantonen"],
+ x:"De omgekeerde bewijslast is een examenfavoriet: die ligt bij degene die de werknemer tegenspreekt, meestal de werkgever."},
+{id:"t12",h:"h5",art:"29 lid 3–4",t:"mc",q:"Wat moet er na een werkonderbreking gebeuren?",
+ o:["Direct melden bij de werkgever of leidinggevende (als die het niet wist), en zo spoedig mogelijk aan de toezichthouder. Die geeft een stilleggingsbevel of verklaart dat het werk kan doorgaan.","Alleen melden bij de OR","Niets, de werknemer beslist zelf wanneer hij weer begint","De werknemer doet aangifte bij de politie"],
+ x:"Met de beslissing van de toezichthouder eindigt het recht om de onderbreking voort te zetten."},
+{id:"t13",h:"h5",art:"30",t:"mc",q:"Wat is het verschil tussen vrijstelling en ontheffing (art. 30)?",
+ o:["Vrijstelling: de minister, voor categorieën. Ontheffing: de toezichthouder, voor een individueel bedrijf.","Vrijstelling: de toezichthouder, individueel. Ontheffing: de minister, voor categorieën.","Er is geen verschil","Vrijstelling is tijdelijk, ontheffing is permanent"],
+ x:"Geheugensteun: ontheffing = Ondernemer, één bedrijf. Beide kunnen onder beperkingen en met voorschriften worden verleend, en worden ingetrokken (lid 6). Geen ontheffing als voor dat voorschrift al een eis is gesteld."},
+{id:"t14",h:"h5",art:"29b lid 5",t:"mc",q:"Wanneer mag de Arbeidsinspectie een boetebesluit op zijn vroegst openbaar maken?",
+ o:["Niet eerder dan tien werkdagen nadat het besluit aan de belanghebbende bekend is gemaakt","Direct","Na zes weken","Pas als het besluit onherroepelijk is"],
+ x:"Ook ‘geen overtreding geconstateerd’ wordt openbaar gemaakt. Bij een verzoek om een voorlopige voorziening wordt de openbaarmaking opgeschort."},
+
+/* ---------- H6 ---------- */
+{id:"s01",h:"h6",art:"32 / 33",t:"mc",q:"Wat is het verschil tussen art. 32 en art. 33?",
+ o:["Art. 32: strafbaar feit als de werkgever weet of redelijkerwijs moet weten dat er levensgevaar of ernstige gezondheidsschade ontstaat. Art. 33: overtredingen die met een bestuurlijke boete worden afgedaan.","Art. 32 gaat over werknemers, art. 33 over werkgevers","Beide leiden tot een bestuurlijke boete","Art. 32 is een overtreding, art. 33 een misdrijf"],
+ x:"De twee sporen: strafrecht (art. 32, via de WED, met het OM) en bestuursrecht (art. 33, een boete van de minister). Voor strafbaar gestelde feiten kan in principe geen bestuurlijke boete worden opgelegd (art. 33 lid 3)."},
+{id:"s02",h:"h6",art:"34 lid 3–4",t:"mc",q:"Wat is de maximale bestuurlijke boete per overtreding?",
+ o:["De 5e categorie van art. 23 WvSr, en de 6e categorie bij art. 6 (zware ongevallen met gevaarlijke stoffen)","Altijd de 6e categorie","De 4e categorie","€ 10.000"],
+ x:"Onthoud de categorieën, niet de bedragen: die worden periodiek geïndexeerd. De concrete boetebedragen staan in beleidsregels (lid 10)."},
+{id:"s03",h:"h6",art:"34 lid 5",t:"mc",q:"Dezelfde overtreding wordt binnen 5 jaar opnieuw geconstateerd en de eerste boete is onherroepelijk. Met hoeveel wordt de boete verhoogd?",
+ o:["Met 100%","Met 50%","Met 200%","Niet, het blijft hetzelfde bedrag"],
+ x:"Recidive = 100% erbij. Bij ernstige overtredingen geldt 200% (lid 6)."},
+{id:"s04",h:"h6",art:"34 lid 6–7",t:"mc",q:"Wanneer wordt de boete met 200% verhoogd?",
+ o:["Als zowel de huidige als de eerdere overtreding ‘ernstig’ zijn, of bij twee eerdere overtredingen binnen 5 jaar","Altijd bij een tweede overtreding","Alleen bij een dodelijk ongeval","Als de werkgever niet meewerkt"],
+ x:"Lid 6: beide ernstig. Lid 7: twee keer eerder. Allebei 200%."},
+{id:"s05",h:"h6",art:"34 lid 9",t:"mc",q:"Welke recidivetermijn geldt bij boetes voor ernstige overtredingen?",
+ o:["10 jaar in plaats van 5","3 jaar","5 jaar, net als altijd","15 jaar"],
+ x:"Getallenrij: 5 jaar normaal, 10 jaar bij ernstige overtredingen."},
+{id:"s06",h:"h6",art:"34 lid 2",t:"mc",q:"Mag de ambtenaar die de boete oplegt dezelfde zijn als de toezichthouder die de overtreding constateerde?",
+ o:["Nee, de boeteoplegger is niet ook als toezichthouder aangewezen","Ja, dat is efficiënt","Alleen bij kleine overtredingen","Ja, als de werkgever akkoord is"],
+ x:"Functiescheiding: de inspecteur maakt een boeterapport (art. 36), een andere ambtenaar legt de boete op."},
+{id:"s07",h:"h6",art:"34 lid 11",t:"mc",q:"De werkgever gaat in beroep tegen een boete. Mag de rechter de boete verhogen?",
+ o:["Ja, in afwijking van art. 8:69 Awb mag de rechter de boete ook ten nadele van de belanghebbende wijzigen","Nee, de rechter mag alleen verlagen","Alleen in hoger beroep","Alleen op verzoek van de minister"],
+ x:"VALKUIL: normaal geldt in het bestuursrecht het verbod van reformatio in peius. In de Arbowet niet."},
+{id:"s08",h:"h6",art:"36–37",t:"mc",q:"Wie krijgt een afschrift van het boeterapport en de boetebeschikking, naast de overtreder?",
+ o:["De andere bij de overtreding betrokken personen, en desgevraagd hun nabestaanden (boetebeschikking)","Alleen de OR","Alleen de bedrijfsarts","Niemand"],
+ x:"Bijvoorbeeld het slachtoffer van een ongeval."},
+{id:"s09",h:"h6",art:"43",t:"mc",q:"Binnen welke termijn wordt een ten onrechte opgelegde boete terugbetaald?",
+ o:["Binnen zes weken nadat dat is vastgesteld","Binnen tien werkdagen","Binnen drie maanden","Binnen een jaar"],
+ x:"6 weken."},
+{id:"s10",h:"h6",art:"44",t:"mc",q:"Mag de werkgever de kosten van verplichte veiligheidsschoenen inhouden op het loon?",
+ o:["Nee, de kosten van naleving van de arboregels komen niet ten laste van werknemers","Ja, voor de helft","Ja, als dat in het contract staat","Alleen bij uitzendkrachten"],
+ x:"Art. 44 is kort en wordt vaak gevraagd."},
+{id:"s11",h:"h6",art:"33 lid 1",t:"mc",q:"Welk artikel staat NIET in de lijst van art. 33 lid 1, en is dus geen beboetbare overtreding?",
+ o:["Art. 2 (uitbreiding toepassingsgebied)","Art. 5 (RI&E)","Art. 9 lid 1 (meldplicht ongevallen)","Art. 15 lid 1 (BHV)"],
+ x:"Art. 2 is een reikwijdtebepaling en bevat geen plicht. De kernplichten 3, 5, 8, 9, 10, 11, 13, 15, 18 en 19 zijn wel beboetbaar."}
+];
+
+/* ---------- State & storage ---------- */
+const INTERVAL = {1:1,2:3,3:7,4:21,5:21}; // dagen tot volgende herhaling na het bereiken van die bak
+const DAY = 864e5;
+const LSKEY = "arbowet-trainer-v1";
+let state = {cards:{}, updated:0};
+let db=null, docRef=null, saving=false, pendingSave=false;
+
+function lsLoad(){try{const s=localStorage.getItem(LSKEY);if(s)return JSON.parse(s)}catch(e){}return null}
+function lsSave(){try{localStorage.setItem(LSKEY,JSON.stringify(state))}catch(e){}}
+const L = lsLoad(); if(L&&L.cards) state=L;
+
+async function remoteSave(){
+  if(!docRef) return;
+  if(saving){pendingSave=true;return}
+  saving=true;
+  try{await docRef.set({cards:state.cards,updated:state.updated});setSync("voortgang: opgeslagen in je account")}
+  catch(e){setSync("voortgang: alleen op dit apparaat")}
+  saving=false;
+  if(pendingSave){pendingSave=false;remoteSave()}
+}
+function save(){state.updated=Date.now();lsSave();remoteSave()}
+function setSync(t){document.getElementById("sync").textContent=t}
+
+(async()=>{
+  try{
+    if(!window.claude||!window.claude.use) return;
+    const [d,u]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!d||!u) return;
+    const id=await u.id(); if(!id) return;
+    db=d; docRef=db.doc("data/users/"+id+"/arbowet");
+    const snap=await docRef.get();
+    if(snap.exists){
+      const r=snap.data();
+      if(r && (r.updated||0) > (state.updated||0)){state={cards:JSON.parse(JSON.stringify(r.cards||{})),updated:r.updated};lsSave();renderHome()}
+      else if((state.updated||0)>(r.updated||0)) remoteSave();
+    } else if(Object.keys(state.cards).length) remoteSave();
+    setSync("voortgang: opgeslagen in je account");
+  }catch(e){}
+})();
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const cs=id=>state.cards[id]||{b:0,d:0,r:0,w:0};
+const isDue=c=>{const s=cs(c.id);return s.b===0||s.d<=Date.now()};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+
+function grade(id,ok){
+  const s={...cs(id)};
+  if(ok){s.b=Math.min(5,(s.b||0)+1);s.r++}else{s.b=1;s.w++}
+  s.d=Date.now()+INTERVAL[s.b]*DAY - 2*36e5; // 2 uur marge
+  state.cards[id]=s; save();
+}
+
+/* ---------- Home ---------- */
+function renderHome(){
+  const counts=[0,0,0,0,0,0];
+  CARDS.forEach(c=>counts[cs(c.id).b]++);
+  const labels=["Nieuw","Bak 1","Bak 2","Bak 3","Bak 4"];
+  const boxes=[["Nieuw",counts[0]],["Bak 1",counts[1]],["Bak 2",counts[2]],["Bak 3–4",counts[3]+counts[4]],["Beheerst",counts[5]]];
+  $("#boxes").innerHTML=boxes.map(([l,n])=>`<div class="box"><b>${n}</b><span>${l}</span></div>`).join("");
+  const sel=$("#chap"); const cur=sel.value||"all";
+  sel.innerHTML=`<option value="all">Alle hoofdstukken (${CARDS.length})</option>`+CH.map(h=>`<option value="${h.k}">${esc(h.n)} · ${h.a}</option>`).join("");
+  sel.value=cur;
+  $("#chapters").innerHTML=CH.map(h=>{
+    const cs_=CARDS.filter(c=>c.h===h.k), n=cs_.length;
+    const m=cs_.filter(c=>cs(c.id).b>=4).length, l=cs_.filter(c=>{const b=cs(c.id).b;return b>=1&&b<4}).length;
+    const due=cs_.filter(isDue).length;
+    return `<div class="ch"><div class="nm">${esc(h.n)}<small>${h.a}</small></div><div class="pct">${due} te doen · ${Math.round(m/n*100)}%</div>
+      <div class="bar" aria-hidden="true"><i style="width:${m/n*100}%;background:var(--accent)"></i><i style="width:${l/n*100}%;background:var(--warn)"></i></div></div>`}).join("");
+  updateStartNote();
+}
+function pool(){
+  const ch=$("#chap").value, mode=$("#mode").value;
+  let p=CARDS.filter(c=>ch==="all"||c.h===ch);
+  if(mode==="due") p=p.filter(isDue);
+  if(mode==="weak") p=p.filter(c=>{const s=cs(c.id);return s.w>0&&(s.w>=s.r||s.b<=2)});
+  if(mode==="exam") p=shuffle(p.filter(c=>c.t==="mc")).slice(0,25);
+  else p=shuffle(p);
+  if(mode==="due"){ // nieuwe kaarten na herhalingen, maximaal 20 per sessie
+    const rev=p.filter(c=>cs(c.id).b>0), nw=p.filter(c=>cs(c.id).b===0);
+    p=rev.concat(nw).slice(0,20);
+  }
+  return p;
+}
+function updateStartNote(){
+  const n=pool().length, mode=$("#mode").value;
+  $("#start").disabled=n===0;
+  $("#startnote").textContent = n===0 ? (mode==="weak"?"Geen zwakke plekken gevonden.":"Niets te doen. Kies ‘Alles in dit hoofdstuk’ om toch te oefenen.") : `${n} kaart${n===1?"":"en"} in deze sessie`;
+}
+
+/* ---------- Session ---------- */
+let S=null;
+function start(){
+  const q=pool(); if(!q.length) return;
+  S={q,i:0,ok:0,exam:$("#mode").value==="exam"};
+  $("#p-home").hidden=true; $("#p-session").hidden=false; $("#p-ref").hidden=true;
+  showCard();
+}
+function showCard(){
+  const c=S.q[S.i]; const card=$("#card");
+  $("#prog").style.width=(S.i/S.q.length*100)+"%";
+  const h=CH.find(x=>x.k===c.h);
+  let html=`<div class="meta"><span class="kind">${c.t==="open"?"Vrije recall":"Meerkeuze"} · ${S.i+1}/${S.q.length}</span><span>${esc(h.n)}</span></div>
+    <p class="q">${esc(c.q)}</p>`;
+  if(c.t==="mc"){
+    const order=shuffle(c.o.map((t,i)=>({t,i})));
+    html+=`<div class="opts">`+order.map(o=>`<button class="opt" data-i="${o.i}">${esc(o.t)}</button>`).join("")+`</div><div id="fb"></div>`;
+    card.innerHTML=html;
+    card.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answerMC(c,+b.dataset.i));
+  } else {
+    html+=`<div class="row"><button class="btn primary" id="reveal">Toon antwoord</button></div><div id="fb"></div>`;
+    card.innerHTML=html;
+    $("#reveal").onclick=()=>{
+      $("#reveal").parentElement.remove();
+      $("#fb").innerHTML=`<div class="ans">${esc(c.a)}</div>${c.x?`<div class="why"><strong>Onthoud:</strong> ${esc(c.x)}</div>`:""}
+        <div class="meta"><span class="ref">art. ${esc(c.art)}</span></div>
+        <div class="row"><button class="btn good" id="yes">Wist ik</button><button class="btn bad" id="no">Wist ik niet</button></div>`;
+      $("#yes").onclick=()=>{grade(c.id,true);S.ok++;next()};
+      $("#no").onclick=()=>{grade(c.id,false);next()};
+      $("#yes").focus();
+    };
+  }
+}
+function answerMC(c,i){
+  const ok=i===0;
+  $("#card").querySelectorAll(".opt").forEach(b=>{b.disabled=true;const k=+b.dataset.i;if(k===0)b.classList.add("right");else if(k===i)b.classList.add("wrong")});
+  grade(c.id,ok); if(ok)S.ok++;
+  $("#fb").innerHTML=`<p class="verdict ${ok?"ok":"no"}">${ok?"Goed.":"Fout."}</p>${c.x?`<div class="why"><strong>Waarom:</strong> ${esc(c.x)}</div>`:""}
+    <div class="meta"><span class="ref">art. ${esc(c.art)}</span></div>
+    <div class="row"><button class="btn primary" id="nx">Volgende</button></div>`;
+  $("#nx").onclick=next; $("#nx").focus();
+}
+function next(){S.i++; if(S.i>=S.q.length) finish(); else showCard()}
+function finish(){
+  $("#prog").style.width="100%";
+  const pct=Math.round(S.ok/S.q.length*100);
+  const verdict = S.exam ? (pct>=70?"Voldoende niveau voor deze stof.":"Nog niet op examenniveau. Herhaal je zwakke plekken.") : "Sessie klaar. Je voortgang is bijgewerkt.";
+  $("#card").innerHTML=`<div class="done"><div class="big">${S.ok}/${S.q.length}</div><p>${pct}% goed</p><p class="note">${verdict}${S.exam?" (70% is hier een eigen richtgetal, geen officiële cesuur.)":""}</p>
+    <div class="row" style="justify-content:center"><button class="btn primary" id="home">Terug naar overzicht</button></div></div>`;
+  $("#home").onclick=goHome;
+}
+function goHome(){S=null;$("#p-session").hidden=true;$("#p-home").hidden=false;renderHome();selectTab("home")}
+
+/* ---------- Overzicht ---------- */
+function renderRef(){
+  $("#p-ref").innerHTML=`
+  <div class="ref-sec">
+    <h2>Getallen en termijnen</h2>
+    <div class="tbl"><table><thead><tr><th>Getal</th><th>Waar het om gaat</th><th>Art.</th></tr></thead><tbody>
+      <tr><td class="n">< 18 jaar</td><td>Extra aandacht bij voorlichting en onderricht</td><td class="n">8 lid 5</td></tr>
+      <tr><td class="n">> 3 werkdagen</td><td>Verzuim waarbij het ongeval op de ongevallenlijst moet</td><td class="n">9 lid 2</td></tr>
+      <tr><td class="n">≤ 25 wn</td><td>Werkgever of directeur mag zelf preventiemedewerker zijn</td><td class="n">13 lid 10</td></tr>
+      <tr><td class="n">≤ 25 wn</td><td>Geen toetsing van de RI&E bij gebruik van een erkend instrument</td><td class="n">14 lid 12 b</td></tr>
+      <tr><td class="n">≤ 40 u/week</td><td>Geen toetsing van de RI&E (alle werknemers samen)</td><td class="n">14 lid 12 a</td></tr>
+      <tr><td class="n">5 jaar</td><td>Looptijd van een cao- of OR-regeling voor deskundige bijstand</td><td class="n">14 lid 11</td></tr>
+      <tr><td class="n">≤ 3 maanden</td><td>Stillegging wegens recidive</td><td class="n">28a lid 1</td></tr>
+      <tr><td class="n">5 jaar</td><td>Geldigheid van de waarschuwing bij recidive-stillegging</td><td class="n">28a lid 4</td></tr>
+      <tr><td class="n">10 werkdagen</td><td>Vroegste openbaarmaking van een boetebesluit</td><td class="n">29b lid 5</td></tr>
+      <tr><td class="n">5e / 6e cat.</td><td>Maximale boete. De 6e categorie geldt voor art. 6 (zware ongevallen)</td><td class="n">34 lid 3–4</td></tr>
+      <tr><td class="n">+100%</td><td>Recidive binnen 5 jaar</td><td class="n">34 lid 5</td></tr>
+      <tr><td class="n">+200%</td><td>Beide overtredingen ernstig, of twee eerdere overtredingen</td><td class="n">34 lid 6–7</td></tr>
+      <tr><td class="n">10 jaar</td><td>Recidivetermijn bij ernstige overtredingen</td><td class="n">34 lid 9</td></tr>
+      <tr><td class="n">6 weken</td><td>Terugbetaling van een ten onrechte opgelegde boete</td><td class="n">43</td></tr>
+    </tbody></table></div>
+
+    <h2>Wie doet wat</h2>
+    <div class="tbl"><table><thead><tr><th>Wie</th><th>Wat</th><th>Art.</th></tr></thead><tbody>
+      <tr><td>Werkgever</td><td>Meldt ongevallen met dood, blijvend letsel of ziekenhuisopname direct aan de toezichthouder</td><td class="n">9 lid 1</td></tr>
+      <tr><td>Bedrijfsarts / arbodienst</td><td>Meldt beroepsziekten aan de aangewezen instelling</td><td class="n">9 lid 3</td></tr>
+      <tr><td>Inlener</td><td>Geeft vóór aanvang de RI&E-informatie aan het uitzendbureau</td><td class="n">5 lid 5</td></tr>
+      <tr><td>OR / PVT</td><td>Instemming met keuze en positionering van de preventiemedewerker</td><td class="n">13 lid 1</td></tr>
+      <tr><td>Kerndeskundige / bedrijfsarts</td><td>Toetst de RI&E en voert het PAGO, de aanstellingskeuring en het spreekuur uit</td><td class="n">14 lid 1</td></tr>
+      <tr><td>Toezichthouder</td><td>Eis tot naleving, stillegging, ontheffing voor een individueel bedrijf</td><td class="n">27, 28, 30</td></tr>
+      <tr><td>Minister</td><td>Vrijstelling voor categorieën, last onder bestuursdwang</td><td class="n">30, 28b</td></tr>
+      <tr><td>Aparte ambtenaar</td><td>Legt de bestuurlijke boete op (is niet de toezichthouder)</td><td class="n">34 lid 1–2</td></tr>
+      <tr><td>Werknemer</td><td>Werkonderbreking bij acuut ernstig gevaar. Behoudt loon. De bewijslast ligt bij wie het betwist.</td><td class="n">29</td></tr>
+    </tbody></table></div>
+
+    <h2>Kaart van de wet</h2>
+    <dl class="map">
+      <dt>H1 · Definities en toepassingsgebied</dt>
+      <dd><span class="ref">1</span>begrippen: arbeidsongeval, PSA, werkgever/werknemer, vrijwilliger · <span class="ref">2</span>EEZ, onderwijs, zeeschepen, luchtvaart</dd>
+      <dt>H2 · Arbeidsomstandighedenbeleid</dt>
+      <dd><span class="ref">3</span>zorgplicht en strategie · <span class="ref">4</span>zieke werknemer · <span class="ref">5</span>RI&E + PvA · <span class="ref">6–7</span>zware ongevallen · <span class="ref">8</span>voorlichting · <span class="ref">9</span>melden en registreren · <span class="ref">10</span>derden · <span class="ref">11</span>plichten werknemer</dd>
+      <dt>H3 · Raadpleging en deskundige bijstand</dt>
+      <dd><span class="ref">12</span>OR · <span class="ref">13</span>preventiemedewerker · <span class="ref">14</span>maatwerk: bedrijfsarts en kerndeskundigen · <span class="ref">14a</span>vangnet: arbodienst · <span class="ref">15</span>BHV · <span class="ref">15a</span>informatierechten</dd>
+      <dt>H4 · Bijzondere verplichtingen</dt>
+      <dd><span class="ref">16</span>Arbobesluit en uitzonderingen · <span class="ref">17</span>maatwerk · <span class="ref">18</span>PAGO · <span class="ref">19</span>meerdere werkgevers · <span class="ref">20–23</span>certificatie</dd>
+      <dt>H5 · Toezicht en ambtelijke bevelen</dt>
+      <dd><span class="ref">24</span>bevoegdheden · <span class="ref">26</span>geheimhouding · <span class="ref">27</span>eis · <span class="ref">28</span>stillegging · <span class="ref">28a</span>recidive-stillegging · <span class="ref">28b</span>bestuursdwang · <span class="ref">29</span>werkonderbreking · <span class="ref">29b</span>openbaarmaking</dd>
+      <dt>H6 · Vrijstellingen, ontheffingen en beroep</dt>
+      <dd><span class="ref">30</span>vrijstelling vs ontheffing · <span class="ref">31</span>administratief beroep</dd>
+      <dt>H7 · Sancties</dt>
+      <dd><span class="ref">32</span>strafbaar · <span class="ref">33</span>overtredingen · <span class="ref">34</span>boetehoogte en recidive · <span class="ref">36–38</span>boeterapport en beschikking · <span class="ref">43</span>terugbetaling</dd>
+      <dt>H8 · Slotbepalingen</dt>
+      <dd><span class="ref">44</span>kosten niet voor werknemers · <span class="ref">46</span>citeertitel</dd>
+    </dl>
+    <p class="note">Bron: Arbeidsomstandighedenwet, geldend vanaf 01-07-2026 (BWBR0010346), geraadpleegd op 13-10-2026. Niet-wettelijke praktijkinvullingen (NCvB, Brzo, kerndeskundigen, Arbeidsinspectie) staan in de uitleg bij de vragen.</p>
+  </div>`;
+}
+
+/* ---------- Tabs & wiring ---------- */
+function selectTab(t){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t?"true":"false"));
+  if(S && t==="home"){$("#p-session").hidden=false;$("#p-home").hidden=true}
+  else {$("#p-home").hidden=t!=="home";$("#p-session").hidden=true}
+  $("#p-ref").hidden=t!=="ref";
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>selectTab(b.dataset.tab));
+$("#mode").onchange=updateStartNote; $("#chap").onchange=updateStartNote;
+$("#start").onclick=start; $("#quit").onclick=goHome;
+renderRef(); renderHome();
+</script>
+
+</body></html>
